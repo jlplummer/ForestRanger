@@ -71,7 +71,7 @@ class Game < Gosu::Window
 		@ranger.draw
 
 		x = 0
-		@item_images.each { |item| item.draw(x, 80, ZOrder::Entities); x += 10}
+		@item_images.each { |item| item.draw(x, 80, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor); x += (10 * GameConstants::SpriteFactor)}
 	end
 
 	def button_down(id)
@@ -120,7 +120,7 @@ class Projectile
 	end
 
 	def draw
-		@cur_image.draw(x, y, ZOrder::Entities)
+		@cur_image.draw(x, y, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
 	end
 end
 
