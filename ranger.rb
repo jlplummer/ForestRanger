@@ -50,7 +50,8 @@ class Game < Gosu::Window
 		# load assets
 		@item_images = Gosu::Image.load_tiles(self, "media/items.bmp", GameConstants::ItemWidth, GameConstants::ItemHeight, false)
 		
-		@projectiles = Array.new		
+		@projectiles = Array.new
+		@arrow_cooldown = 0
 		
 		Gosu::enable_undocumented_retrofication
 	end
@@ -67,11 +68,20 @@ class Game < Gosu::Window
 		end
 
 		if button_down? Gosu::KbSpace then
-			@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Arrow], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
+			if @arrow_cooldown == 0 then
+				@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Arrow], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
+				@arrow_cooldown = 5
+			end
+			
+			if @arrow_cooldown > 0 then
+				@arrow_cooldown -= 1
+			end
 		end
 		
 		@ranger.move(move_x, move_y)
 		@projectiles.each { |item| item.move(10) }
+		
+		
 		
 	end
 
