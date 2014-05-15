@@ -49,7 +49,9 @@ class Game < Gosu::Window
 
 		# load assets
 		@item_images = Gosu::Image.load_tiles(self, "media/items.bmp", GameConstants::ItemWidth, GameConstants::ItemHeight, false)
-
+		
+		@projectile = Projectile.new(self, @item_images[GameConstants::ItemIndexes::Arrow], 150, 150)
+		
 		Gosu::enable_undocumented_retrofication
 	end
 
@@ -72,6 +74,8 @@ class Game < Gosu::Window
 
 		x = 0
 		@item_images.each { |item| item.draw(x, 80, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor); x += (10 * GameConstants::SpriteFactor)}
+		
+		@projectile.draw
 	end
 
 	def button_down(id)
@@ -111,7 +115,7 @@ end
 class Projectile
 	attr_reader :x, :y
 
-	def initialize(image, x, y)
+	def initialize(window, image, x, y)
 		@cur_image = image
 		@x, @y = x, y
 	end
@@ -120,7 +124,7 @@ class Projectile
 	end
 
 	def draw
-		@cur_image.draw(x, y, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+		@cur_image.draw_rot(x, y, ZOrder::Entities, 45.0, 0.5, 0.5, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
 	end
 end
 
