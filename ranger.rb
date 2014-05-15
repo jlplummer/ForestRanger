@@ -67,10 +67,11 @@ class Game < Gosu::Window
 		end
 
 		if button_down? Gosu::KbSpace then
-			@projectiles.push(Projectile.new(self, , @player.x + 50, @player.y + (@player.height / 2)))
+			@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Arrow], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
 		end
 		
 		@ranger.move(move_x, move_y)
+		@projectiles.each { |item| item.move(10) }
 		
 	end
 
@@ -80,7 +81,7 @@ class Game < Gosu::Window
 		x = 0
 		@item_images.each { |item| item.draw(x, 80, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor); x += (10 * GameConstants::SpriteFactor)}
 		
-		@projectile.draw
+		@projectiles.each { |item| item.draw }
 	end
 
 	def button_down(id)
@@ -92,6 +93,7 @@ class Game < Gosu::Window
 end
 
 class Ranger
+	attr_reader :x, :y
 
 	def initialize(window, x, y)
 		@cur_image = Gosu::Image.new(window, "media/ranger.bmp", false)
@@ -125,7 +127,8 @@ class Projectile
 		@x, @y = x, y
 	end
 
-	def update(x, y)
+	def move(x)
+		@x += x
 	end
 
 	def draw
