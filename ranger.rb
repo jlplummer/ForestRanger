@@ -17,6 +17,9 @@ module GameConstants
 	ItemHeight = 8
 	ItemWidth  = 8
 
+	EnemyHeight = 10
+	EnemyWidth = 8
+	
 	SpriteFactor = 3.0
 
 	module Text
@@ -47,8 +50,11 @@ class Game < Gosu::Window
 
 		@ranger = Ranger.new(self, 0, 0)
 
+		@font = Gosu::Font.new(self, Gosu::default_font_name, 10)
+		
 		# load assets
 		@item_images = Gosu::Image.load_tiles(self, "media/items.bmp", GameConstants::ItemWidth, GameConstants::ItemHeight, false)
+		@enemy_images = Gosu::Image.load_tiles(self, "media/enemies.bmp", 10, 8, false)
 		
 		@projectiles = Array.new
 		@arrow_cooldown = 0
@@ -105,10 +111,13 @@ class Game < Gosu::Window
 
 	def draw
 		@ranger.draw
+		
+		@font.draw("Arrows: #{@projectiles.count}", 10, 10, 3, 1.0, 1.0, 0xffffff00)
 
 		x = 0
 		@item_images.each { |item| item.draw(x, 80, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor); x += (10 * GameConstants::SpriteFactor)}
-		
+		x = 0
+		@enemy_images.each { |enemy| enemy.draw(x, 150, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor) ; x+= (10 * GameConstants::SpriteFactor)}
 		@projectiles.each { |item| item.draw }
 	end
 
@@ -159,6 +168,23 @@ class Projectile
 		@x += x
 	end
 
+	def draw
+		@cur_image.draw_rot(x, y, ZOrder::Entities, 45.0, 0.5, 0.5, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+	end
+end
+
+class Enemy
+	attr_reader :x, :y
+	
+	def initialize(window, image, x, y)
+		@cur_image = image
+		@x, @y = x, y
+	end
+	
+	def move(x)
+	
+	end
+	
 	def draw
 		@cur_image.draw_rot(x, y, ZOrder::Entities, 45.0, 0.5, 0.5, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
 	end
