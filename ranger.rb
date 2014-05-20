@@ -37,6 +37,19 @@ module GameConstants
 		Dagger    = 10
 		Torch     = 11
 	end
+	
+	module EnemyIndexes
+		Shadow = 0
+		Unarmored = 1
+		GoblinSpear = 2
+		GoblinSword = 3
+		GoblinBow = 4
+		GoblinHammer = 5
+		OrcSpear = 6
+		OrcSword = 7
+		OrcBow = 8
+		OrcHammer = 9
+	end
 end
 
 class Game < Gosu::Window
@@ -49,10 +62,14 @@ class Game < Gosu::Window
 
 		# load assets
 		@item_images = Gosu::Image.load_tiles(self, "media/items.bmp", GameConstants::ItemWidth, GameConstants::ItemHeight, false)
+		@enemy_images = Gosu::Image.load_tiles(self, "media/enemies.bmp", GameConstants::ItemWidth, GameConstants::ItemHeight, false)
 		
 		@projectiles = Array.new
 		@arrow_cooldown = 0
 		@dagger_cooldown = 0
+		
+		@enemies = Array.new
+		@enemy_cooldown = 0
 		
 		Gosu::enable_undocumented_retrofication
 	end
@@ -91,9 +108,6 @@ class Game < Gosu::Window
 		end
 		
 		@ranger.move(move_x, move_y)
-<<<<<<< HEAD
-		@projectiles.each { |item| item.move(10) }		
-=======
 		@projectiles.each { |item| item.move(10) }
 		
 		@projectiles.reject! do |item|
@@ -104,10 +118,14 @@ class Game < Gosu::Window
 		  end
 		end
 		
-<<<<<<< HEAD
->>>>>>> 5279f9d00f55a686be8b28c53ad44309af95b121
-=======
->>>>>>> 5279f9d00f55a686be8b28c53ad44309af95b121
+		if @enemy_cooldown <= 0 then
+		  @enemy_cooldown = 20
+		  
+		  @enemies.push(Enemy.new(self, @enemy_images[rand(10)], GameConstants::ScreenWidth - 8, rand(GameConstants::ScreenHeight)))
+		end
+		
+		@enemy_cooldown -= 5
+		@enemies.each { |enemy| enemy.move(2) }
 	end
 
 	def draw
@@ -115,8 +133,11 @@ class Game < Gosu::Window
 
 		x = 0
 		@item_images.each { |item| item.draw(x, 80, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor); x += (10 * GameConstants::SpriteFactor)}
+		x = 0
+		@enemy_images.each { |item| item.draw(x, 150, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor); x += (10 * GameConstants::SpriteFactor)}
 		
 		@projectiles.each { |item| item.draw }
+		@enemies.each { |item| item.draw }
 	end
 
 	def button_down(id)
@@ -168,6 +189,35 @@ class Projectile
 
 	def draw
 		@cur_image.draw_rot(x, y, ZOrder::Entities, 45.0, 0.5, 0.5, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+	end
+end
+
+class Enemy
+	attr_reader :x, :y
+	
+	def initialize(window, image, x, y)
+		@cur_image = image
+		
+		if y < 8 then
+		  y = 8
+		end
+		#if (y + self.height) > GameConstants::ScreenHeight then
+		#  y = GameConstants::ScreenHeight - self.height
+		#end
+		
+		@x, @y, = x, y
+	end
+	
+	def move(x)
+		@x -= x
+	end
+	
+	def draw
+		@cur_image.draw_rot(x, y, ZOrder::Entities, 1.0, 1.0, 1.0, -GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+	end
+	
+	def attack
+		nil
 	end
 end
 
