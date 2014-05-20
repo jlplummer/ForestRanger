@@ -52,6 +52,7 @@ class Game < Gosu::Window
 		
 		@projectiles = Array.new
 		@arrow_cooldown = 0
+		@dagger_cooldown = 0
 		
 		Gosu::enable_undocumented_retrofication
 	end
@@ -67,10 +68,10 @@ class Game < Gosu::Window
 			move_y += @ranger.height
 		end
 
-		if button_down? Gosu::KbSpace then
+		if button_down? Gosu::KbA then
 			if @arrow_cooldown == 0 then
 				@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Arrow], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
-				@arrow_cooldown = 5
+				@arrow_cooldown = 20
 			end
 			
 			if @arrow_cooldown > 0 then
@@ -78,11 +79,32 @@ class Game < Gosu::Window
 			end
 		end
 		
+		if button_down? Gosu::KbD then
+			if @dagger_cooldown == 0 then
+				@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Dagger], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
+				@dagger_cooldown = 20
+			end
+			
+			if @dagger_cooldown > 0 then
+				@dagger_cooldown -= 1
+			end
+		end
+		
 		@ranger.move(move_x, move_y)
+<<<<<<< HEAD
+		@projectiles.each { |item| item.move(10) }		
+=======
 		@projectiles.each { |item| item.move(10) }
 		
+		@projectiles.reject! do |item|
+		  if item.x > GameConstants::ScreenWidth then
+			true
+		  else
+		    false
+		  end
+		end
 		
-		
+>>>>>>> 5279f9d00f55a686be8b28c53ad44309af95b121
 	end
 
 	def draw
