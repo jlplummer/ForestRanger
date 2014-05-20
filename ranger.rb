@@ -104,6 +104,9 @@ class Game < Gosu::Window
 		  end
 		end
 		
+<<<<<<< HEAD
+>>>>>>> 5279f9d00f55a686be8b28c53ad44309af95b121
+=======
 >>>>>>> 5279f9d00f55a686be8b28c53ad44309af95b121
 	end
 
