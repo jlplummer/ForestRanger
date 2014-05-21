@@ -67,11 +67,7 @@ class Game < Gosu::Window
 		
 		# load assets
 		@item_images = Gosu::Image.load_tiles(self, "media/items.bmp", GameConstants::ItemWidth, GameConstants::ItemHeight, false)
-<<<<<<< HEAD
 		@enemy_images = Gosu::Image.load_tiles(self, "media/enemies.bmp", 10, 8, false)
-=======
-		@enemy_images = Gosu::Image.load_tiles(self, "media/enemies.bmp", GameConstants::ItemWidth, GameConstants::ItemHeight, false)
->>>>>>> 1804d10d2357a97835ccf4834890052c02840dfa
 		
 		@projectiles = Array.new
 		@arrow_cooldown = 0
@@ -144,15 +140,11 @@ class Game < Gosu::Window
 
 		x = 0
 		@item_images.each { |item| item.draw(x, 80, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor); x += (10 * GameConstants::SpriteFactor)}
-		x = 0
-<<<<<<< HEAD
-		@enemy_images.each { |enemy| enemy.draw(x, 150, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor) ; x+= (10 * GameConstants::SpriteFactor)}
-=======
-		@enemy_images.each { |item| item.draw(x, 150, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor); x += (10 * GameConstants::SpriteFactor)}
+		#x = 0
+		#@enemy_images.each { |enemy| enemy.draw(x, 150, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor) ; x+= (10 * GameConstants::SpriteFactor)}
 		
->>>>>>> 1804d10d2357a97835ccf4834890052c02840dfa
 		@projectiles.each { |item| item.draw }
-		@enemies.each { |item| item.draw }
+		@enemies.each { |enemy| enemy.draw }
 	end
 
 	def button_down(id)
@@ -212,17 +204,6 @@ class Enemy
 	
 	def initialize(window, image, x, y)
 		@cur_image = image
-<<<<<<< HEAD
-		@x, @y = x, y
-	end
-	
-	def move(x)
-	
-	end
-	
-	def draw
-		@cur_image.draw_rot(x, y, ZOrder::Entities, 45.0, 0.5, 0.5, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
-=======
 		
 		if y < 8 then
 		  y = 8
@@ -231,20 +212,19 @@ class Enemy
 		#  y = GameConstants::ScreenHeight - self.height
 		#end
 		
-		@x, @y, = x, y
+		@x, @y = x, y
+	end
+	
+	def draw		
+		@cur_image.draw_rot(x, y, ZOrder::Entities, 1.0, 1.0, 1.0, -GameConstants::SpriteFactor, GameConstants::SpriteFactor)
 	end
 	
 	def move(x)
 		@x -= x
 	end
 	
-	def draw
-		@cur_image.draw_rot(x, y, ZOrder::Entities, 1.0, 1.0, 1.0, -GameConstants::SpriteFactor, GameConstants::SpriteFactor)
-	end
-	
 	def attack
 		nil
->>>>>>> 1804d10d2357a97835ccf4834890052c02840dfa
 	end
 end
 
