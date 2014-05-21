@@ -137,9 +137,11 @@ class Game < Gosu::Window
 		  @projectiles.each { |projectile| 
 		  # this is broke... needs to check on the Y axis as well
 		    if (projectile.x < enemy.x + enemy.width) and (projectile.x > enemy.x) then
-			  @player_score += 10
-			  @projectiles.delete(projectile)
-			  @enemies.delete(enemy)
+		    	if (projectile.y < enemy.y + enemy.height) and (projectile.y > enemy.y) then
+				  @player_score += 10
+				  @projectiles.delete(projectile)
+				  @enemies.delete(enemy)
+				end
 			end
 		  }
 		
@@ -220,7 +222,7 @@ class Projectile
 end
 
 class Enemy
-	attr_reader :x, :y, :width
+	attr_reader :x, :y, :width, :height
 	
 	def initialize(window, image, x, y)
 		@cur_image = image
@@ -249,6 +251,10 @@ class Enemy
 	
 	def width
 	  @cur_image.width
+	end
+
+	def height
+		@cur_image.height
 	end
 end
 
