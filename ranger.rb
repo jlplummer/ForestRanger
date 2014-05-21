@@ -73,6 +73,9 @@ class Game < Gosu::Window
 		@enemies = Array.new
 		@enemy_cooldown = 0
 		
+		@player_score  = 0
+		@player_misses = 0
+		
 		Gosu::enable_undocumented_retrofication
 	end
 
@@ -121,7 +124,7 @@ class Game < Gosu::Window
 		end
 		
 		if @enemy_cooldown <= 0 then
-		  @enemy_cooldown = 20
+		  @enemy_cooldown = 200
 		  
 		  @enemies.push(Enemy.new(self, @enemy_images[rand(10)], GameConstants::ScreenWidth - 8, rand(GameConstants::ScreenHeight)))
 		end
@@ -130,7 +133,18 @@ class Game < Gosu::Window
 		@enemies.each { |enemy| enemy.move(2) }
 		
 		@enemies.reject! do |enemy|
+		  #projectile_hit = false
+		  @projectiles.each { |projectile| 
+		  # this is broke... needs to check on the Y axis as well
+		    if (projectile.x < enemy.x + enemy.width) and (projectile.x > enemy.x) then
+			  @player_score += 10
+			  @projectiles.delete(projectile)
+			  @enemies.delete(enemy)
+			end
+		  }
+		
 		  if enemy.x < 0 then
+		    @player_misses += 1
 		    true
 		  else
 		    false
@@ -206,7 +220,7 @@ class Projectile
 end
 
 class Enemy
-	attr_reader :x, :y
+	attr_reader :x, :y, :width
 	
 	def initialize(window, image, x, y)
 		@cur_image = image
@@ -231,6 +245,10 @@ class Enemy
 	
 	def attack
 		nil
+	end
+	
+	def width
+	  @cur_image.width
 	end
 end
 
