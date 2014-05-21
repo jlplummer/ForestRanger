@@ -120,7 +120,7 @@ class Game < Gosu::Window
 		  end
 		end
 		
-		if @enemy_cooldown <= 0 and @enemies.count < 150 then
+		if @enemy_cooldown <= 0 then
 		  @enemy_cooldown = 20
 		  
 		  @enemies.push(Enemy.new(self, @enemy_images[rand(10)], GameConstants::ScreenWidth - 8, rand(GameConstants::ScreenHeight)))
@@ -128,6 +128,14 @@ class Game < Gosu::Window
 		
 		@enemy_cooldown -= 5
 		@enemies.each { |enemy| enemy.move(2) }
+		
+		@enemies.reject! do |enemy|
+		  if enemy.x < 0 then
+		    true
+		  else
+		    false
+		  end
+		end
 	end
 
 	def draw
