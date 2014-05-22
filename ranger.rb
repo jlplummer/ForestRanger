@@ -56,6 +56,8 @@ class Game < Gosu::Window
 
 	def initialize
 		super GameConstants::ScreenWidth, GameConstants::ScreenHeight, false
+		Gosu::enable_undocumented_retrofication
+		
 		self.caption = GameConstants::Text::Caption
 
 		@ranger = Ranger.new(self, 0, 0)
@@ -76,7 +78,7 @@ class Game < Gosu::Window
 		@player_score  = 0
 		@player_misses = 0
 		
-		Gosu::enable_undocumented_retrofication
+		
 	end
 
 	def update
