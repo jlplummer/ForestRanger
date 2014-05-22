@@ -93,7 +93,7 @@ class Game < Gosu::Window
 		if button_down? Gosu::KbA then
 			if @arrow_cooldown == 0 then
 				@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Arrow], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
-				@arrow_cooldown = 20
+				@arrow_cooldown = 3
 			end
 			
 			if @arrow_cooldown > 0 then
@@ -104,7 +104,7 @@ class Game < Gosu::Window
 		if button_down? Gosu::KbD then
 			if @dagger_cooldown == 0 then
 				@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Dagger], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
-				@dagger_cooldown = 20
+				@dagger_cooldown = 3
 			end
 			
 			if @dagger_cooldown > 0 then
@@ -135,14 +135,12 @@ class Game < Gosu::Window
 		@enemies.reject! do |enemy|
 		  #projectile_hit = false
 		  @projectiles.each { |projectile| 
-		  # this is broke... needs to check on the Y axis as well
-		    if (projectile.x < enemy.x + enemy.width) and (projectile.x > enemy.x) then
-		    	if (projectile.y < enemy.y + enemy.height) and (projectile.y > enemy.y) then
+		  	#if check_collisions(projectile, enemy, 0, 0)
+		  	if check_collisions_tutorial(projectile.x, projectile.y, enemy.x, enemy.y) then
 				  @player_score += 10
 				  @projectiles.delete(projectile)
 				  @enemies.delete(enemy)
 				end
-			end
 		  }
 		
 		  if enemy.x < 0 then
@@ -175,6 +173,43 @@ class Game < Gosu::Window
 		end
 	end
 
+	def check_collisions_tutorial(moving_x, moving_y, hit_x, hit_y)
+		if Gosu::distance(moving_x, moving_y, hit_x, hit_y) < 35 then
+			true
+		else
+			false
+		end
+	end
+
+	def check_collisions(moving, being_hit, move_x, move_y)
+		left1 = moving.x + move_x
+		left2 = being_hit.x
+		right1 = moving.x + move_x + moving.width
+		right2 = being_hit.x + being_hit.width
+		top1 = moving.y + move_y
+		top2 = being_hit.y
+		bottom1 = moving.y + move_y + moving.height
+		bottom2 = being_hit.y + being_hit.height
+
+		if bottom1 < top2
+			return false
+		end
+
+		if top1 > bottom2
+			return false
+		end
+
+		if right1 < left2
+			return false
+		end
+
+		if left1 > right2
+			return false
+		end
+
+		return true
+	end
+
 end
 
 class Ranger
@@ -205,7 +240,7 @@ class Ranger
 end
 
 class Projectile
-	attr_reader :x, :y
+	attr_reader :x, :y, :width, :height
 
 	def initialize(window, image, x, y)
 		@cur_image = image
@@ -218,6 +253,14 @@ class Projectile
 
 	def draw
 		@cur_image.draw_rot(x, y, ZOrder::Entities, 45.0, 0.5, 0.5, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+	end
+
+	def width
+		@cur_image.width
+	end
+
+	def height
+		@cur_image.height
 	end
 end
 
