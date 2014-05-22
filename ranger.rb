@@ -157,6 +157,7 @@ class Game < Gosu::Window
 
 		@font.draw("Arrows: #{@projectiles.count}", 10, 10, 3, 1.0, 1.0, 0xffffff00)
 		@font.draw("Enemies: #{@enemies.count}", 10, 30, 3, 1.0, 1.0, 0xffffff00)
+		@font.draw("Score: #{@player_score}", 50, 10, 3, 1.0, 1.0, 0xffffff00)
 		
 		x = 0
 		@item_images.each { |item| item.draw(x, 80, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor); x += (10 * GameConstants::SpriteFactor)}
