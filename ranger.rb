@@ -134,7 +134,7 @@ class Game < Gosu::Window
 		end
 		
 		if @enemy_cooldown <= 0 then
-		  @enemy_cooldown = 200
+		  @enemy_cooldown = 10
 		  
 		  @enemies.push(Enemy.new(self, @enemy_images[rand(10)], GameConstants::ScreenWidth - 8, rand(GameConstants::ScreenHeight)))
 		end
@@ -163,14 +163,14 @@ class Game < Gosu::Window
 	end
 
 	def draw
-		for y in 0..@background_rows do 
-			for x in 0..@background_cols do
-				tile = @tiles[x][y]
-				if tile
-				  @background_images[tile].draw(x * 1, y * 1, ZOrder::Background)
-			  end
-			end
-		end
+		#for y in 0..@background_rows do 
+		#	for x in 0..@background_cols do
+		#		tile = @tiles[x][y]
+		#		if tile
+	#			  @background_images[tile].draw(x * 1, y * 1, ZOrder::Background)
+		#	  end
+		#	end
+		#end
 
 		@ranger.draw
 
