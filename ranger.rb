@@ -65,8 +65,9 @@ class Game < Gosu::Window
 		@font = Gosu::Font.new(self, Gosu::default_font_name, 10)
 
 		# load assets
-		@item_images = Gosu::Image.load_tiles(self, "media/items.bmp", GameConstants::ItemWidth, GameConstants::ItemHeight, false)
-		@enemy_images = Gosu::Image.load_tiles(self, "media/enemies.bmp", GameConstants::ItemWidth, GameConstants::ItemHeight, false)
+		@item_images       = Gosu::Image.load_tiles(self, "media/items.bmp", GameConstants::ItemWidth, GameConstants::ItemHeight, false)
+		@enemy_images      = Gosu::Image.load_tiles(self, "media/enemies.bmp", GameConstants::ItemWidth, GameConstants::ItemHeight, false)
+		@background_images = Gosu::Image.load_tiles(self, "media/grass.bmp", GameConstants::TileWidth, GameConstants::TileHeight, false)
 		
 		@projectiles = Array.new
 		@arrow_cooldown = 0
@@ -77,8 +78,15 @@ class Game < Gosu::Window
 		
 		@player_score  = 0
 		@player_misses = 0
-		
-		
+
+		@background_rows = GameConstants::ScreenHeight / (GameConstants::TileHeight * GameConstants::SpriteFactor)
+		@background_cols = GameConstants::ScreenWidth / (GameConstants::TileWidth * GameConstants::SpriteFactor)
+
+		@tiles = Array.new(@background_cols) do |x|
+			Array.new(@background_rows) do |y|
+				rand(@background_images.count)
+			end
+		end
 	end
 
 	def update
@@ -155,16 +163,27 @@ class Game < Gosu::Window
 	end
 
 	def draw
+		for y in 0..@background_rows do 
+			for x in 0..@background_cols do
+				tile = @tiles[x][y]
+				if tile
+				  @background_images[tile].draw(x * 1, y * 1, ZOrder::Background)
+			  end
+			end
+		end
+
 		@ranger.draw
 
 		@font.draw("Arrows: #{@projectiles.count}", 10, 10, 3, 1.0, 1.0, 0xffffff00)
 		@font.draw("Enemies: #{@enemies.count}", 10, 30, 3, 1.0, 1.0, 0xffffff00)
 		@font.draw("Score: #{@player_score}", 50, 10, 3, 1.0, 1.0, 0xffffff00)
+
+		@font.draw("Tile Size: #{@background_images[0].width} wide and #{@background_images[0].height} tall", 0, 200, 3, 1.0, 1.0, 0xffffff00)
 		
-		x = 0
-		@item_images.each { |item| item.draw(x, 80, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor); x += (10 * GameConstants::SpriteFactor)}
-		x = 0
-		@enemy_images.each { |item| item.draw(x, 150, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor); x += (10 * GameConstants::SpriteFactor)}
+		#x = 0
+		#@item_images.each { |item| item.draw(x, 80, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor); x += (10 * GameConstants::SpriteFactor)}
+		#x = 0
+		#@enemy_images.each { |item| item.draw(x, 150, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor); x += (10 * GameConstants::SpriteFactor)}
 		
 		@projectiles.each { |item| item.draw }
 		@enemies.each { |item| item.draw }
