@@ -68,7 +68,8 @@ class Game < Gosu::Window
 		@item_images       = Gosu::Image.load_tiles(self, "media/items.bmp", GameConstants::ItemWidth, GameConstants::ItemHeight, false)
 		@enemy_images      = Gosu::Image.load_tiles(self, "media/enemies.bmp", GameConstants::ItemWidth, GameConstants::ItemHeight, false)
 		@background_images = Gosu::Image.load_tiles(self, "media/grass.bmp", GameConstants::TileWidth, GameConstants::TileHeight, false)
-		
+		@font_images       = Gosu::Image.load_tiles(self, "media/font.bmp", 8, 8, false)
+
 		@projectiles = Array.new
 		@arrow_cooldown = 0
 		@dagger_cooldown = 0
@@ -79,14 +80,17 @@ class Game < Gosu::Window
 		@player_score  = 0
 		@player_misses = 0
 
-		@background_rows = GameConstants::ScreenHeight / (GameConstants::TileHeight * GameConstants::SpriteFactor)
-		@background_cols = GameConstants::ScreenWidth / (GameConstants::TileWidth * GameConstants::SpriteFactor)
+		#@background_rows = GameConstants::ScreenHeight / (GameConstants::TileHeight * GameConstants::SpriteFactor)
+		#@background_cols = GameConstants::ScreenWidth / (GameConstants::TileWidth * GameConstants::SpriteFactor)
+		@background_rows = GameConstants::ScreenHeight / (GameConstants::TileHeight)
+		@background_cols = GameConstants::ScreenWidth / (GameConstants::TileWidth)
 
-		@tiles = Array.new(@background_cols) do |x|
-			Array.new(@background_rows) do |y|
-				rand(@background_images.count)
-			end
+
+		@background_tiles = Array.new(@background_rows)
+		for x in 0..@background_rows
+			@background_tiles[x] = Array.new(@background_cols)
 		end
+		generate_background
 	end
 
 	def update
@@ -163,22 +167,30 @@ class Game < Gosu::Window
 	end
 
 	def draw
-		#for y in 0..@background_rows do 
-		#	for x in 0..@background_cols do
-		#		tile = @tiles[x][y]
-		#		if tile
-	#			  @background_images[tile].draw(x * 1, y * 1, ZOrder::Background)
-		#	  end
-		#	end
-		#end
+		tile_x = tile_y = 0
+		#for x in 0...@background_tiles.size
+		#	for y in 0...@background_tiles.size
+		for x in 0...@background_rows
+			for y in 0...@background_cols
+				@background_images[@background_tiles[x][y]].draw(tile_x, tile_y, ZOrder::Background, GameConstants::SpriteFactor * 2, GameConstants::SpriteFactor * 2)
+				tile_y += (GameConstants::TileWidth * GameConstants::SpriteFactor)
+			end
+			tile_y = 0
+			tile_x += (GameConstants::TileHeight * GameConstants::SpriteFactor)
+		end
 
 		@ranger.draw
+
+		draw_score
 
 		@font.draw("Arrows: #{@projectiles.count}", 10, 10, 3, 1.0, 1.0, 0xffffff00)
 		@font.draw("Enemies: #{@enemies.count}", 10, 30, 3, 1.0, 1.0, 0xffffff00)
 		@font.draw("Score: #{@player_score}", 50, 10, 3, 1.0, 1.0, 0xffffff00)
 
-		@font.draw("Tile Size: #{@background_images[0].width} wide and #{@background_images[0].height} tall", 0, 200, 3, 1.0, 1.0, 0xffffff00)
+		#@font.draw("Tile Size: #{@background_images[0].width} wide and #{@background_images[0].height} tall", 0, 200, 3, 1.0, 1.0, 0xffffff00)
+		#@font.draw("Background Rows = #{@background_tiles.size}", 0, 200, 3, 1.0, 1.0, 0xffffff00)
+		#@font.draw("Background Cols = #{@background_tiles[x].size}", 0, 225, 3, 1.0, 1.0, 0xffffff00)
+
 		
 		#x = 0
 		#@item_images.each { |item| item.draw(x, 80, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor); x += (10 * GameConstants::SpriteFactor)}
@@ -232,6 +244,78 @@ class Game < Gosu::Window
 		return true
 	end
 
+	def generate_background
+		for x in 0...@background_tiles.size
+			for y in 0...@background_tiles[x].size
+				@background_tiles[x][y] = rand(0...@background_images.size)
+			end
+		end
+	end
+
+	def draw_score
+		score_x = 200
+		score_y = 0
+
+		# S - 29
+		@font_images[28].draw(score_x, score_y, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+		score_x += 8 * GameConstants::SpriteFactor
+
+		# C - 13
+		@font_images[12].draw(score_x, score_y, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+		score_x += 8 * GameConstants::SpriteFactor
+
+		# O - 25
+		@font_images[24].draw(score_x, score_y, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+		score_x += 8 * GameConstants::SpriteFactor
+
+		# R - 28
+		@font_images[27].draw(score_x, score_y, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+		score_x += 8 * GameConstants::SpriteFactor
+
+		# E - 15
+		@font_images[14].draw(score_x, score_y, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+		score_x += 8 * GameConstants::SpriteFactor
+
+		score_x = GameConstants::ScreenWidth - (8 * GameConstants::SpriteFactor)
+		score_string = String.new(@player_score.to_s)
+		# reverse the string and print the first character to the right
+		# 150 becomes 051
+		score_string.reverse!
+		#@font.draw("score_string = '#{score_string}'", 0, 275, 10, 3.0, 3.0, 0xffffff00)
+		for c in 0...score_string.length
+
+			score_char = score_string[c].to_i
+
+			#@font.draw("score_char = '#{score_char}'", 0, 280, 10, 3.0, 3.0, 0xffffff00)
+			case score_char
+			when 0
+				font_index = 0
+			when 1
+				font_index = 1
+			when 2
+				font_index = 2
+			when 3
+				font_index = 3
+			when 4
+				font_index = 4
+			when 5
+				font_index = 5
+			when 6
+				font_index = 6
+			when 7
+				font_index = 7
+			when 8
+				font_index = 8
+			when 9
+				font_index = 9
+			end
+
+			#@font.draw("font_index = '#{font_index}'", 0, 250, 10, 3.0, 3.0, 0xffffff00)
+			@font_images[font_index].draw(score_x, score_y, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+			score_x -= 8 * GameConstants::SpriteFactor
+		end
+
+	end
 end
 
 class Ranger
