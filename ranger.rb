@@ -1,3 +1,12 @@
+#TODO
+# movement be grid based
+# lose condition
+# waves of enemies
+# powerups
+# refactor source
+# game states: menu, high scores, etc
+# special effects
+
 require 'gosu'
 
 module ZOrder
@@ -18,6 +27,9 @@ module GameConstants
 	ItemWidth  = 8
 
 	SpriteFactor = 3.0
+
+	EnemyCooldown = 200
+	CollisionDistance = 10
 
 	module Text
 		Caption = "Forest Ranger"
@@ -60,7 +72,7 @@ class Game < Gosu::Window
 		
 		self.caption = GameConstants::Text::Caption
 
-		@ranger = Ranger.new(self, 0, 0)
+		@ranger = Ranger.new(self, 0, (GameConstants::ScreenHeight / 2))
 		
 		@font = Gosu::Font.new(self, Gosu::default_font_name, 10)
 
@@ -80,8 +92,6 @@ class Game < Gosu::Window
 		@player_score  = 0
 		@player_misses = 0
 
-		#@background_rows = GameConstants::ScreenHeight / (GameConstants::TileHeight * GameConstants::SpriteFactor)
-		#@background_cols = GameConstants::ScreenWidth / (GameConstants::TileWidth * GameConstants::SpriteFactor)
 		@background_rows = GameConstants::ScreenHeight / (GameConstants::TileHeight)
 		@background_cols = GameConstants::ScreenWidth / (GameConstants::TileWidth)
 
@@ -138,20 +148,20 @@ class Game < Gosu::Window
 		end
 		
 		if @enemy_cooldown <= 0 then
-		  @enemy_cooldown = 10
-		  
-		  @enemies.push(Enemy.new(self, @enemy_images[rand(10)], GameConstants::ScreenWidth - 8, rand(GameConstants::ScreenHeight)))
+		  @enemy_cooldown = GameConstants::EnemyCooldown
+		
+			@enemy_type = rand(0...10)  
+
+		  @enemies.push(Enemy.new(self, @enemy_images[@enemy_type], @enemy_type, GameConstants::ScreenWidth - 8, rand(50...(GameConstants::ScreenHeight - (8 * GameConstants::SpriteFactor)))))
 		end
 		
 		@enemy_cooldown -= 5
 		@enemies.each { |enemy| enemy.move(2) }
 		
 		@enemies.reject! do |enemy|
-		  #projectile_hit = false
 		  @projectiles.each { |projectile| 
-		  	#if check_collisions(projectile, enemy, 0, 0)
 		  	if check_collisions_tutorial(projectile.x, projectile.y, enemy.x, enemy.y) then
-				  @player_score += 10
+				  @player_score += enemy.value
 				  @projectiles.delete(projectile)
 				  @enemies.delete(enemy)
 				end
@@ -170,6 +180,8 @@ class Game < Gosu::Window
 		tile_x = tile_y = 0
 		#for x in 0...@background_tiles.size
 		#	for y in 0...@background_tiles.size
+
+		# fix me... X = columns not rows, goober
 		for x in 0...@background_rows
 			for y in 0...@background_cols
 				@background_images[@background_tiles[x][y]].draw(tile_x, tile_y, ZOrder::Background, GameConstants::SpriteFactor * 2, GameConstants::SpriteFactor * 2)
@@ -181,21 +193,12 @@ class Game < Gosu::Window
 
 		@ranger.draw
 
+		health_x = 5
+		for h in 1..@ranger.health
+			@item_images[2].draw(health_x, 0, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+			health_x += (GameConstants::ItemWidth * GameConstants::SpriteFactor) + 5
+		end
 		draw_score
-
-		@font.draw("Arrows: #{@projectiles.count}", 10, 10, 3, 1.0, 1.0, 0xffffff00)
-		@font.draw("Enemies: #{@enemies.count}", 10, 30, 3, 1.0, 1.0, 0xffffff00)
-		@font.draw("Score: #{@player_score}", 50, 10, 3, 1.0, 1.0, 0xffffff00)
-
-		#@font.draw("Tile Size: #{@background_images[0].width} wide and #{@background_images[0].height} tall", 0, 200, 3, 1.0, 1.0, 0xffffff00)
-		#@font.draw("Background Rows = #{@background_tiles.size}", 0, 200, 3, 1.0, 1.0, 0xffffff00)
-		#@font.draw("Background Cols = #{@background_tiles[x].size}", 0, 225, 3, 1.0, 1.0, 0xffffff00)
-
-		
-		#x = 0
-		#@item_images.each { |item| item.draw(x, 80, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor); x += (10 * GameConstants::SpriteFactor)}
-		#x = 0
-		#@enemy_images.each { |item| item.draw(x, 150, ZOrder::Entities, GameConstants::SpriteFactor, GameConstants::SpriteFactor); x += (10 * GameConstants::SpriteFactor)}
 		
 		@projectiles.each { |item| item.draw }
 		@enemies.each { |item| item.draw }
@@ -208,7 +211,7 @@ class Game < Gosu::Window
 	end
 
 	def check_collisions_tutorial(moving_x, moving_y, hit_x, hit_y)
-		if Gosu::distance(moving_x, moving_y, hit_x, hit_y) < 35 then
+		if Gosu::distance(moving_x, moving_y, hit_x, hit_y) < GameConstants::CollisionDistance then
 			true
 		else
 			false
@@ -281,12 +284,9 @@ class Game < Gosu::Window
 		# reverse the string and print the first character to the right
 		# 150 becomes 051
 		score_string.reverse!
-		#@font.draw("score_string = '#{score_string}'", 0, 275, 10, 3.0, 3.0, 0xffffff00)
 		for c in 0...score_string.length
-
 			score_char = score_string[c].to_i
-
-			#@font.draw("score_char = '#{score_char}'", 0, 280, 10, 3.0, 3.0, 0xffffff00)
+			
 			case score_char
 			when 0
 				font_index = 0
@@ -310,7 +310,6 @@ class Game < Gosu::Window
 				font_index = 9
 			end
 
-			#@font.draw("font_index = '#{font_index}'", 0, 250, 10, 3.0, 3.0, 0xffffff00)
 			@font_images[font_index].draw(score_x, score_y, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
 			score_x -= 8 * GameConstants::SpriteFactor
 		end
@@ -319,11 +318,12 @@ class Game < Gosu::Window
 end
 
 class Ranger
-	attr_reader :x, :y
+	attr_reader :x, :y, :health
 
 	def initialize(window, x, y)
 		@cur_image = Gosu::Image.new(window, "media/ranger.bmp", false)
 		@x, @y = x, y
+		@health = 5
 	end
 
 	def draw
@@ -371,19 +371,36 @@ class Projectile
 end
 
 class Enemy
-	attr_reader :x, :y, :width, :height
+	attr_reader :x, :y, :width, :height, :value
 	
-	def initialize(window, image, x, y)
-		@cur_image = image
-		
-		if y < 8 then
-		  y = 8
-		end
-		#if (y + self.height) > GameConstants::ScreenHeight then
-		#  y = GameConstants::ScreenHeight - self.height
-		#end
-		
+	def initialize(window, image, type, x, y)
+		@cur_image = image		
 		@x, @y, = x, y
+
+		case type
+		when 0
+			@value = 1000
+		when 1
+			@value = 10
+		when 2
+			@value = 15
+		when 3
+			@value = 15
+		when 4
+			@value = 10
+		when 5
+			@value = 20
+		when 6
+			@value = 30
+		when 7
+			@value = 35
+		when 8
+			@value = 35
+		when 9
+			@value = 60
+		else
+			@value = 0
+		end
 	end
 	
 	def move(x)
