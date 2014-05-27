@@ -6,6 +6,9 @@
 # refactor source
 # game states: menu, high scores, etc
 # special effects
+# hp for enemies, damage ratings for hero
+# sound
+# cleanup variables, use constants everywhere
 
 require 'gosu'
 
@@ -29,7 +32,11 @@ module GameConstants
 	SpriteFactor = 3.0
 
 	EnemyCooldown = 200
-	CollisionDistance = 10
+	CollisionDistance = 20
+	ArrowCooldown = 10
+	DaggerCooldown = 10
+
+	PlayerMove = 8 * SpriteFactor
 
 	module Text
 		Caption = "Forest Ranger"
@@ -95,7 +102,6 @@ class Game < Gosu::Window
 		@background_rows = GameConstants::ScreenHeight / (GameConstants::TileHeight)
 		@background_cols = GameConstants::ScreenWidth / (GameConstants::TileWidth)
 
-
 		@background_tiles = Array.new(@background_rows)
 		for x in 0..@background_rows
 			@background_tiles[x] = Array.new(@background_cols)
@@ -107,17 +113,17 @@ class Game < Gosu::Window
 		move_x = move_y = 0
 
 		if button_down? Gosu::KbUp then
-			move_y -= @ranger.height
+			move_y -= @ranger.height * GameConstants::SpriteFactor
 		end
 
 		if button_down? Gosu::KbDown then
-			move_y += @ranger.height
+			move_y += @ranger.height * GameConstants::SpriteFactor
 		end
 
 		if button_down? Gosu::KbA then
 			if @arrow_cooldown == 0 then
 				@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Arrow], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
-				@arrow_cooldown = 3
+				@arrow_cooldown = GameConstants::ArrowCooldown
 			end
 			
 			if @arrow_cooldown > 0 then
@@ -128,7 +134,7 @@ class Game < Gosu::Window
 		if button_down? Gosu::KbD then
 			if @dagger_cooldown == 0 then
 				@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Dagger], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
-				@dagger_cooldown = 3
+				@dagger_cooldown = GameConstants::DaggerCooldown
 			end
 			
 			if @dagger_cooldown > 0 then
@@ -141,7 +147,7 @@ class Game < Gosu::Window
 		
 		@projectiles.reject! do |item|
 		  if item.x > GameConstants::ScreenWidth then
-			true
+				true
 		  else
 		    false
 		  end
@@ -331,6 +337,14 @@ class Ranger
 	end
 
 	def move(x, y)
+		if (@y + y) < 0 + (8 * GameConstants::SpriteFactor)
+			y = 0
+		end
+
+		if (@y + y) > GameConstants::ScreenHeight - (8 * GameConstants::SpriteFactor)
+			y = 0
+		end
+
 		@x += x
 		@y += y
 	end
