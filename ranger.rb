@@ -107,107 +107,130 @@ class Game < Gosu::Window
 			@background_tiles[x] = Array.new(@background_cols)
 		end
 		generate_background
+
+		@curr_state = :new
 	end
 
 	def update
-		move_x = move_y = 0
 
-		if button_down? Gosu::KbUp then
-			move_y -= @ranger.height * GameConstants::SpriteFactor
-		end
+		case @curr_state
+		when :playing
+			move_x = move_y = 0
 
-		if button_down? Gosu::KbDown then
-			move_y += @ranger.height * GameConstants::SpriteFactor
-		end
+			if button_down? Gosu::KbUp then
+				move_y -= @ranger.height * GameConstants::SpriteFactor
+			end
 
-		if button_down? Gosu::KbA then
-			if @arrow_cooldown == 0 then
-				@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Arrow], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
-				@arrow_cooldown = GameConstants::ArrowCooldown
+			if button_down? Gosu::KbDown then
+				move_y += @ranger.height * GameConstants::SpriteFactor
 			end
-			
-			if @arrow_cooldown > 0 then
-				@arrow_cooldown -= 1
-			end
-		end
-		
-		if button_down? Gosu::KbD then
-			if @dagger_cooldown == 0 then
-				@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Dagger], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
-				@dagger_cooldown = GameConstants::DaggerCooldown
-			end
-			
-			if @dagger_cooldown > 0 then
-				@dagger_cooldown -= 1
-			end
-		end
-		
-		@ranger.move(move_x, move_y)
-		@projectiles.each { |item| item.move(10) }
-		
-		@projectiles.reject! do |item|
-		  if item.x > GameConstants::ScreenWidth then
-				true
-		  else
-		    false
-		  end
-		end
-		
-		if @enemy_cooldown <= 0 then
-		  @enemy_cooldown = GameConstants::EnemyCooldown
-		
-			@enemy_type = rand(0...10)  
 
-		  @enemies.push(Enemy.new(self, @enemy_images[@enemy_type], @enemy_type, GameConstants::ScreenWidth - 8, rand(50...(GameConstants::ScreenHeight - (8 * GameConstants::SpriteFactor)))))
-		end
-		
-		@enemy_cooldown -= 5
-		@enemies.each { |enemy| enemy.move(2) }
-		
-		@enemies.reject! do |enemy|
-		  @projectiles.each { |projectile| 
-		  	if check_collisions_tutorial(projectile.x, projectile.y, enemy.x, enemy.y) then
-				  @player_score += enemy.value
-				  @projectiles.delete(projectile)
-				  @enemies.delete(enemy)
+			if button_down? Gosu::KbA then
+				if @arrow_cooldown == 0 then
+					@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Arrow], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
+					@arrow_cooldown = GameConstants::ArrowCooldown
 				end
-		  }
-		
-		  if enemy.x < 0 then
-		    @player_misses += 1
-		    true
-		  else
-		    false
-		  end
+				
+				if @arrow_cooldown > 0 then
+					@arrow_cooldown -= 1
+				end
+			end
+			
+			if button_down? Gosu::KbD then
+				if @dagger_cooldown == 0 then
+					@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Dagger], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
+					@dagger_cooldown = GameConstants::DaggerCooldown
+				end
+				
+				if @dagger_cooldown > 0 then
+					@dagger_cooldown -= 1
+				end
+			end
+			
+			@ranger.move(move_x, move_y)
+			@projectiles.each { |item| item.move(10) }
+			
+			@projectiles.reject! do |item|
+			  if item.x > GameConstants::ScreenWidth then
+					true
+			  else
+			    false
+			  end
+			end
+			
+			if @enemy_cooldown <= 0 then
+			  @enemy_cooldown = GameConstants::EnemyCooldown
+			
+				@enemy_type = rand(0...10)  
+
+			  @enemies.push(Enemy.new(self, @enemy_images[@enemy_type], @enemy_type, GameConstants::ScreenWidth - 8, rand(50...(GameConstants::ScreenHeight - (8 * GameConstants::SpriteFactor)))))
+			end
+			
+			@enemy_cooldown -= 5
+			@enemies.each { |enemy| enemy.move(2) }
+			
+			@enemies.reject! do |enemy|
+			  @projectiles.each { |projectile| 
+			  	if check_collisions_tutorial(projectile.x, projectile.y, enemy.x, enemy.y) then
+					  @player_score += enemy.value
+					  @projectiles.delete(projectile)
+					  @enemies.delete(enemy)
+					end
+			  }
+			
+			  if enemy.x < 0 then
+			    @ranger.damage(1)
+			    true
+			  else
+			    false
+			  end
+			end
+
+		when :new
+			if button_down? Gosu::KbSpace
+				@curr_state = :playing
+			end
+		when :paused
+
+		when :dead
 		end
 	end
 
 	def draw
-		tile_x = tile_y = 0
-		#for x in 0...@background_tiles.size
-		#	for y in 0...@background_tiles.size
 
-		# fix me... X = columns not rows, goober
-		for x in 0...@background_rows
-			for y in 0...@background_cols
-				@background_images[@background_tiles[x][y]].draw(tile_x, tile_y, ZOrder::Background, GameConstants::SpriteFactor * 2, GameConstants::SpriteFactor * 2)
-				tile_y += (GameConstants::TileWidth * GameConstants::SpriteFactor)
+		case @curr_state
+		when :new
+			draw_newgame
+
+		when :playing
+			tile_x = tile_y = 0
+			#for x in 0...@background_tiles.size
+			#	for y in 0...@background_tiles.size
+
+			# fix me... X = columns not rows, goober
+			for x in 0...@background_rows
+				for y in 0...@background_cols
+					@background_images[@background_tiles[x][y]].draw(tile_x, tile_y, ZOrder::Background, GameConstants::SpriteFactor * 2, GameConstants::SpriteFactor * 2)
+					tile_y += (GameConstants::TileWidth * GameConstants::SpriteFactor)
+				end
+				tile_y = 0
+				tile_x += (GameConstants::TileHeight * GameConstants::SpriteFactor)
 			end
-			tile_y = 0
-			tile_x += (GameConstants::TileHeight * GameConstants::SpriteFactor)
-		end
 
-		@ranger.draw
+			@ranger.draw
 
-		health_x = 5
-		for h in 1..@ranger.health
-			@item_images[2].draw(health_x, 0, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
-			health_x += (GameConstants::ItemWidth * GameConstants::SpriteFactor) + 5
+			health_x = 5
+			for h in 1..@ranger.health
+				@item_images[2].draw(health_x, 0, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+				health_x += (GameConstants::ItemWidth * GameConstants::SpriteFactor) + 5
+			end
+			draw_score
+			
+			@projectiles.each { |item| item.draw }
+			@enemies.each { |item| item.draw }
+		when :paused
+		when :dead
 		end
-		draw_score
-		
-		@projectiles.each { |item| item.draw }
-		@enemies.each { |item| item.draw }
 	end
 
 	def button_down(id)
@@ -319,8 +342,61 @@ class Game < Gosu::Window
 			@font_images[font_index].draw(score_x, score_y, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
 			score_x -= 8 * GameConstants::SpriteFactor
 		end
-
 	end
+
+	def draw_newgame
+		message_x = (GameConstants::ScreenWidth / 2) - ((8 * GameConstants::SpriteFactor) * 3)
+		message_y = (GameConstants::ScreenHeight / 2)
+
+		# P - 26
+		@font_images[25].draw(message_x, message_y, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+		message_x += 8 * GameConstants::SpriteFactor
+
+		# R - 28
+		@font_images[27].draw(message_x, message_y, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+		message_x += 8 * GameConstants::SpriteFactor
+
+		# E - 15
+		@font_images[14].draw(message_x, message_y, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+		message_x += 8 * GameConstants::SpriteFactor
+
+		# S - 29
+		@font_images[28].draw(message_x, message_y, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+		message_x += 8 * GameConstants::SpriteFactor
+
+		# S - 29
+		@font_images[28].draw(message_x, message_y, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+		message_x += 8 * GameConstants::SpriteFactor
+
+		message_x = (GameConstants::ScreenWidth / 2) - ((8 * GameConstants::SpriteFactor) * 3)
+		message_y += 8 * GameConstants::SpriteFactor + 5
+		# S - 29
+		@font_images[28].draw(message_x, message_y, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+		message_x += 8 * GameConstants::SpriteFactor
+
+		# P - 26
+		@font_images[25].draw(message_x, message_y, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+		message_x += 8 * GameConstants::SpriteFactor
+
+		# A - 11
+		@font_images[10].draw(message_x, message_y, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+		message_x += 8 * GameConstants::SpriteFactor
+
+		# C - 13
+		@font_images[12].draw(message_x, message_y, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+		message_x += 8 * GameConstants::SpriteFactor
+
+		# E - 15
+		@font_images[14].draw(message_x, message_y, ZOrder::UI, GameConstants::SpriteFactor, GameConstants::SpriteFactor)
+		message_x += 8 * GameConstants::SpriteFactor
+	end
+
+	def draw_paused
+	end
+
+	def draw_gameover
+	end
+
 end
 
 class Ranger
@@ -357,6 +433,9 @@ class Ranger
 		@cur_image.width
 	end
 
+	def damage(damage)
+		@health -= damage
+	end
 end
 
 class Projectile
