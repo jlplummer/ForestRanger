@@ -98,6 +98,8 @@ class Game < Gosu::Window
 		@player_score  = 0
 		@player_misses = 0
 
+		@button_cooldown = 7
+
 		@background_rows = GameConstants::ScreenHeight / (GameConstants::TileHeight)
 		@background_cols = GameConstants::ScreenWidth / (GameConstants::TileWidth)
 
@@ -116,41 +118,45 @@ class Game < Gosu::Window
 		when :playing
 			move_x = move_y = 0
 
-			if button_down? Gosu::KbSpace then
-				@curr_state = :paused
-				return
-			end
+			if @button_cooldown <= 0 then
+				if button_down? Gosu::KbSpace then
+					@curr_state = :paused
+					return
+				end
 
-			if button_down? Gosu::KbUp then
-				move_y -= @ranger.height * GameConstants::SpriteFactor
-			end
+				if button_down? Gosu::KbUp then
+					move_y -= @ranger.height * GameConstants::SpriteFactor
+				end
 
-			if button_down? Gosu::KbDown then
-				move_y += @ranger.height * GameConstants::SpriteFactor
-			end
+				if button_down? Gosu::KbDown then
+					move_y += @ranger.height * GameConstants::SpriteFactor
+				end
 
-			if button_down? Gosu::KbA then
-				if @arrow_cooldown == 0 then
-					@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Arrow], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
-					@arrow_cooldown = GameConstants::ArrowCooldown
+				if button_down? Gosu::KbA then
+					if @arrow_cooldown == 0 then
+						@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Arrow], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
+						@arrow_cooldown = GameConstants::ArrowCooldown
+					end
+					
+					if @arrow_cooldown > 0 then
+						@arrow_cooldown -= 1
+					end
 				end
 				
-				if @arrow_cooldown > 0 then
-					@arrow_cooldown -= 1
+				if button_down? Gosu::KbD then
+					if @dagger_cooldown == 0 then
+						@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Dagger], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
+						@dagger_cooldown = GameConstants::DaggerCooldown
+					end
+					
+					if @dagger_cooldown > 0 then
+						@dagger_cooldown -= 1
+					end
 				end
+
+				@button_cooldown = 7
 			end
-			
-			if button_down? Gosu::KbD then
-				if @dagger_cooldown == 0 then
-					@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Dagger], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
-					@dagger_cooldown = GameConstants::DaggerCooldown
-				end
-				
-				if @dagger_cooldown > 0 then
-					@dagger_cooldown -= 1
-				end
-			end
-			
+
 			@ranger.move(move_x, move_y)
 			@projectiles.each { |item| item.move(10) }
 			
@@ -199,18 +205,21 @@ class Game < Gosu::Window
 				@player_score = 0
 				@projectiles.clear
 				@enemies.clear
+				@button_cooldown = 7
 
 				@curr_state = :playing
 			end
 		when :paused
-			if button_down? Gosu::KbSpace
+			if button_down? Gosu::KbSpace and @button_cooldown <= 0
 				@curr_state = :playing
 			end
 		when :dead
-			if button_down? Gosu::KbSpace
+			if button_down? Gosu::KbSpace and @button_cooldown <= 0
 				@curr_state = :new
 			end
 		end
+
+		@button_cooldown -= 1
 	end
 
 	def draw
