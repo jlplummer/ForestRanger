@@ -1,6 +1,5 @@
 #TODO
 # movement be grid based
-# lose condition
 # waves of enemies
 # powerups
 # refactor source
@@ -117,6 +116,11 @@ class Game < Gosu::Window
 		when :playing
 			move_x = move_y = 0
 
+			if button_down? Gosu::KbSpace then
+				@curr_state = :paused
+				return
+			end
+
 			if button_down? Gosu::KbUp then
 				move_y -= @ranger.height * GameConstants::SpriteFactor
 			end
@@ -183,16 +187,29 @@ class Game < Gosu::Window
 			    true
 			  else
 			    false
-			  end
+			  end  
 			end
 
+			if @ranger.health <= 0
+				@curr_state = :dead
+			end
 		when :new
 			if button_down? Gosu::KbSpace
+				@ranger.reset_health
+				@player_score = 0
+				@projectiles.clear
+				@enemies.clear
+
 				@curr_state = :playing
 			end
 		when :paused
-
+			if button_down? Gosu::KbSpace
+				@curr_state = :playing
+			end
 		when :dead
+			if button_down? Gosu::KbSpace
+				@curr_state = :new
+			end
 		end
 	end
 
@@ -229,7 +246,9 @@ class Game < Gosu::Window
 			@projectiles.each { |item| item.draw }
 			@enemies.each { |item| item.draw }
 		when :paused
+			@font.draw("Game Paused", 5, GameConstants::ScreenHeight / 2, ZOrder::UI, 10.0, 10.0, 0xffffff00)
 		when :dead
+			@font.draw("You're Dead", 5, GameConstants::ScreenHeight / 2, ZOrder::UI, 10.0, 10.0, 0xffffff00)
 		end
 	end
 
@@ -435,6 +454,10 @@ class Ranger
 
 	def damage(damage)
 		@health -= damage
+	end
+
+	def reset_health
+		@health = 5
 	end
 end
 
