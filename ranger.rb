@@ -37,6 +37,8 @@ module GameConstants
 
 	PlayerMove = 8 * SpriteFactor
 
+	ButtonCooldown = 500 # milliseconds
+
 	module Text
 		Caption = "Forest Ranger"
 	end
@@ -98,7 +100,8 @@ class Game < Gosu::Window
 		@player_score  = 0
 		@player_misses = 0
 
-		@button_cooldown = 7
+		@button_cooldown = true
+		@last_button_press = 0
 
 		@background_rows = GameConstants::ScreenHeight / (GameConstants::TileHeight)
 		@background_cols = GameConstants::ScreenWidth / (GameConstants::TileWidth)
@@ -118,43 +121,40 @@ class Game < Gosu::Window
 		when :playing
 			move_x = move_y = 0
 
-			if @button_cooldown <= 0 then
-				if button_down? Gosu::KbSpace then
-					@curr_state = :paused
-					return
-				end
+			if button_down? Gosu::KbSpace and @button_cooldown then
+				@curr_state = :paused
+				@button_cooldown = false
+				return
+			end
 
-				if button_down? Gosu::KbUp then
-					move_y -= @ranger.height * GameConstants::SpriteFactor
-				end
+			if button_down? Gosu::KbUp then
+				move_y -= @ranger.height * GameConstants::SpriteFactor
+			end
 
-				if button_down? Gosu::KbDown then
-					move_y += @ranger.height * GameConstants::SpriteFactor
-				end
+			if button_down? Gosu::KbDown then
+				move_y += @ranger.height * GameConstants::SpriteFactor
+			end
 
-				if button_down? Gosu::KbA then
-					if @arrow_cooldown == 0 then
-						@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Arrow], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
-						@arrow_cooldown = GameConstants::ArrowCooldown
-					end
-					
-					if @arrow_cooldown > 0 then
-						@arrow_cooldown -= 1
-					end
+			if button_down? Gosu::KbA then
+				if @arrow_cooldown == 0 then
+					@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Arrow], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
+					@arrow_cooldown = GameConstants::ArrowCooldown
 				end
 				
-				if button_down? Gosu::KbD then
-					if @dagger_cooldown == 0 then
-						@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Dagger], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
-						@dagger_cooldown = GameConstants::DaggerCooldown
-					end
-					
-					if @dagger_cooldown > 0 then
-						@dagger_cooldown -= 1
-					end
+				if @arrow_cooldown > 0 then
+					@arrow_cooldown -= 1
 				end
-
-				@button_cooldown = 7
+			end
+			
+			if button_down? Gosu::KbD then
+				if @dagger_cooldown == 0 then
+					@projectiles.push(Projectile.new(self, @item_images[GameConstants::ItemIndexes::Dagger], @ranger.x + 50, @ranger.y + (@ranger.height / 2)))
+					@dagger_cooldown = GameConstants::DaggerCooldown
+				end
+				
+				if @dagger_cooldown > 0 then
+					@dagger_cooldown -= 1
+				end
 			end
 
 			@ranger.move(move_x, move_y)
@@ -171,7 +171,7 @@ class Game < Gosu::Window
 			if @enemy_cooldown <= 0 then
 			  @enemy_cooldown = GameConstants::EnemyCooldown
 			
-				@enemy_type = rand(0...10)  
+			  @enemy_type = rand(0...10)  
 
 			  @enemies.push(Enemy.new(self, @enemy_images[@enemy_type], @enemy_type, GameConstants::ScreenWidth - 8, rand(50...(GameConstants::ScreenHeight - (8 * GameConstants::SpriteFactor)))))
 			end
@@ -200,26 +200,30 @@ class Game < Gosu::Window
 				@curr_state = :dead
 			end
 		when :new
-			if button_down? Gosu::KbSpace
+			if button_down? Gosu::KbSpace  and @button_cooldown
 				@ranger.reset_health
 				@player_score = 0
 				@projectiles.clear
 				@enemies.clear
-				@button_cooldown = 7
+				@button_cooldown = GameConstants::ButtonCooldown
 
 				@curr_state = :playing
 			end
 		when :paused
-			if button_down? Gosu::KbSpace and @button_cooldown <= 0
+			if button_down? Gosu::KbSpace and @button_cooldown
 				@curr_state = :playing
 			end
 		when :dead
-			if button_down? Gosu::KbSpace and @button_cooldown <= 0
+			if button_down? Gosu::KbSpace  and @button_cooldown
 				@curr_state = :new
 			end
 		end
 
-		@button_cooldown -= 1
+		if (Gosu::milliseconds - @last_button_press) >= GameConstants::ButtonCooldown then
+			@button_cooldown = true
+		else
+			@button_cooldown = false
+		end
 	end
 
 	def draw
@@ -261,7 +265,9 @@ class Game < Gosu::Window
 		end
 	end
 
-	def button_down(id)
+	def button_down(id)	
+		@last_button_press = Gosu::milliseconds
+
 		if id == Gosu::KbEscape
 			close
 		end
