@@ -30,6 +30,12 @@ module GameConstants
 
 	SpriteFactor = 3.0
 
+	FootmanHeight = 8
+	FootmanWidth  = 8
+
+	KnightHeight = 16
+	KnightWidth = 19
+
 	EnemyCooldown = 200
 	CollisionDistance = 20
 	ArrowCooldown = 10
@@ -89,6 +95,8 @@ class Game < Gosu::Window
 		@enemy_images      = Gosu::Image.load_tiles(self, "media/enemies.bmp", GameConstants::ItemWidth, GameConstants::ItemHeight, false)
 		@background_images = Gosu::Image.load_tiles(self, "media/grass.bmp", GameConstants::TileWidth, GameConstants::TileHeight, false)
 		@font_images       = Gosu::Image.load_tiles(self, "media/font.bmp", 8, 8, false)
+		@footmen_images    = Gosu::Image.load_tiles(self, "media/knights_nohorses.bmp", GameConstants::FootmanWidth, GameConstants::FootmanHeight, false)
+		@knight_images     = Gosu::Image.load_tiles(self, "media/knights_horsed.bmp", GameConstants::KnightWidth, GameConstants::KnightHeight, false)
 
 		@projectiles = Array.new
 		@arrow_cooldown = 0
@@ -128,11 +136,13 @@ class Game < Gosu::Window
 			end
 
 			if button_down? Gosu::KbUp then
-				move_y -= @ranger.height * GameConstants::SpriteFactor
+				#move_y -= @ranger.height * GameConstants::SpriteFactor
+				move_y -= @ranger.height
 			end
 
 			if button_down? Gosu::KbDown then
-				move_y += @ranger.height * GameConstants::SpriteFactor
+				#move_y += @ranger.height * GameConstants::SpriteFactor
+				move_y += @ranger.height
 			end
 
 			if button_down? Gosu::KbA then
