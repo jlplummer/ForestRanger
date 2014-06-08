@@ -25,12 +25,7 @@ class Game < Gosu::Window
 	end
 
 	def draw
-
 		@knights.each { |knight| knight.draw}
-
-		# @green_knight.draw
-		# @blue_knight.draw
-		# @red_knight.draw
 	end
 
 end
@@ -42,6 +37,9 @@ class Knight
 		@x, @y = x, y
 		@start_y = y
 		@direction_y = :up
+		@speed_y = 1
+		@direction_cooldown = 200
+		@last_move = Gosu::milliseconds
 	end
 
 	def draw
@@ -51,13 +49,20 @@ class Knight
 	def move(x)
 		@x += x
 
-		#magic number here means how far on Y it's allowed to move
-		if @direction_y == :up 
-			@y -= 10
-			@direction_y = :down
+		if (Gosu::milliseconds - @last_move) > @direction_cooldown
+			if @direction_y == :up 
+				@direction_y = :down
+			else
+				@direction_y = :up
+			end
+
+			@last_move = Gosu::milliseconds
+		end
+
+		if @direction_y == :up
+			@y -= 1
 		else
-			@y += 10
-			@direction_y = :up
+			@y += 1
 		end
 	end
 end
